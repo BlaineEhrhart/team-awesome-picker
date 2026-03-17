@@ -172,12 +172,17 @@ function drawWheel() {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(start + sliceAngle / 2);
-        ctx.fillStyle = '#fff';
         ctx.font = 'bold 13px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const labelRadius = radius * 0.65;
-        ctx.fillText(name.length > 12 ? name.slice(0, 11) + '…' : name, labelRadius, 0);
+        const label = name.length > 12 ? name.slice(0, 11) + '…' : name;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(label, labelRadius, 0);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(label, labelRadius, 0);
         ctx.restore();
     });
 }
