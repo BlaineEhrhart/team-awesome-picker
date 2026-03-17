@@ -1,13 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
+
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-    --text: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --radius: 8px;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --primary: #0ff;
+    --primary-hover: #0dd;
+    --accent: #f0f;
+    --accent2: #ff2d95;
+    --bg: #0a0a1a;
+    --bg-darker: #06060f;
+    --surface: rgba(10, 15, 40, 0.85);
+    --surface-border: rgba(0, 255, 255, 0.15);
+    --text: #e0e8ff;
+    --text-muted: #5a6a8a;
+    --border: rgba(0, 255, 255, 0.2);
+    --radius: 4px;
+    --shadow: 0 0 15px rgba(0, 255, 255, 0.1), 0 0 30px rgba(0, 0, 0, 0.5);
+    --glow-cyan: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.15);
+    --glow-magenta: 0 0 10px rgba(255, 0, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.15);
 }
 
 * {
@@ -17,25 +25,62 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated grid background */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Subtle scanline effect */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
 }
 
 header {
-    background: var(--primary);
-    color: white;
+    background: linear-gradient(180deg, rgba(0, 255, 255, 0.08) 0%, var(--bg-darker) 100%);
+    border-bottom: 1px solid var(--border);
+    color: var(--primary);
     padding: 1.5rem;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
 }
 
 header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.2);
 }
 
 main {
@@ -44,20 +89,30 @@ main {
     width: 100%;
     margin: 0 auto;
     padding: 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 /* Name Input Section */
 .name-input-section {
     background: var(--surface);
+    border: 1px solid var(--surface-border);
     border-radius: var(--radius);
     padding: 1.25rem;
     box-shadow: var(--shadow);
     margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
 }
 
 .name-input-section h2 {
-    font-size: 1rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
     margin-bottom: 0.75rem;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
 .input-row {
@@ -70,13 +125,21 @@ main {
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    font-family: 'Share Tech Mono', monospace;
     font-size: 0.95rem;
     outline: none;
-    transition: border-color 0.2s;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-row input::placeholder {
+    color: var(--text-muted);
 }
 
 .input-row input:focus {
     border-color: var(--primary);
+    box-shadow: var(--glow-cyan);
 }
 
 .name-chips {
@@ -90,13 +153,15 @@ main {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background: #eef2ff;
+    background: rgba(0, 255, 255, 0.08);
     color: var(--primary);
     padding: 0.3rem 0.6rem;
     border-radius: 999px;
+    border: 1px solid rgba(0, 255, 255, 0.25);
     font-size: 0.85rem;
     font-weight: 500;
     animation: chipIn 0.25s ease;
+    text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 }
 
 @keyframes chipIn {
@@ -107,17 +172,18 @@ main {
 .chip button {
     background: none;
     border: none;
-    color: var(--primary);
+    color: var(--accent);
     cursor: pointer;
     font-size: 1rem;
     line-height: 1;
     padding: 0;
     opacity: 0.6;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, text-shadow 0.2s;
 }
 
 .chip button:hover {
     opacity: 1;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
 }
 
 /* Buttons */
@@ -125,24 +191,34 @@ main {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: var(--radius);
-    font-size: 0.95rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
     font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s, text-shadow 0.2s;
 }
 
 .btn-primary {
-    background: var(--primary);
-    color: white;
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.15));
+    color: var(--primary);
+    border: 1px solid var(--border);
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover);
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.35), rgba(255, 0, 255, 0.25));
+    box-shadow: var(--glow-cyan);
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
 }
 
 .btn-primary:disabled {
-    background: #a5b4fc;
+    background: rgba(30, 40, 60, 0.5);
+    color: var(--text-muted);
+    border-color: rgba(90, 106, 138, 0.2);
     cursor: not-allowed;
+    box-shadow: none;
+    text-shadow: none;
 }
 
 /* Tabs */
@@ -152,26 +228,37 @@ main {
     margin-bottom: 1.5rem;
     background: var(--surface);
     border-radius: var(--radius);
+    border: 1px solid var(--surface-border);
     box-shadow: var(--shadow);
     overflow: hidden;
+    backdrop-filter: blur(10px);
 }
 
 .tab {
     flex: 1;
     padding: 0.75rem;
     text-align: center;
+    font-family: 'Orbitron', sans-serif;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
-    background: var(--surface);
+    background: transparent;
     border: none;
     color: var(--text-muted);
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, text-shadow 0.2s;
+}
+
+.tab:hover {
+    color: var(--text);
 }
 
 .tab.active {
-    background: var(--primary);
-    color: white;
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 0, 255, 0.1));
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    box-shadow: inset 0 -2px 0 var(--primary);
 }
 
 /* Tab Content */
@@ -192,10 +279,12 @@ main {
 /* Wheel Section */
 .wheel-section {
     background: var(--surface);
+    border: 1px solid var(--surface-border);
     border-radius: var(--radius);
     padding: 1.25rem;
     box-shadow: var(--shadow);
     text-align: center;
+    backdrop-filter: blur(10px);
 }
 
 .wheel-container {
@@ -213,30 +302,36 @@ main {
     height: 0;
     border-left: 12px solid transparent;
     border-right: 12px solid transparent;
-    border-top: 20px solid var(--text);
+    border-top: 20px solid var(--primary);
     z-index: 1;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.8));
 }
 
 canvas {
     display: block;
     max-width: 100%;
     height: auto;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.15));
 }
 
 .winner-display {
     margin-top: 1rem;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--accent);
     min-height: 2rem;
+    text-shadow: 0 0 15px rgba(255, 0, 255, 0.7), 0 0 30px rgba(255, 0, 255, 0.3);
 }
 
 /* Groups Section */
 .groups-section {
     background: var(--surface);
+    border: 1px solid var(--surface-border);
     border-radius: var(--radius);
     padding: 1.25rem;
     box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
 }
 
 .group-controls {
@@ -247,8 +342,13 @@ canvas {
 }
 
 .group-controls label {
+    font-family: 'Orbitron', sans-serif;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--primary);
+    text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 }
 
 .group-controls input[type="number"] {
@@ -256,13 +356,17 @@ canvas {
     padding: 0.5rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    font-family: 'Share Tech Mono', monospace;
     font-size: 0.95rem;
     text-align: center;
     outline: none;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text);
 }
 
 .group-controls input[type="number"]:focus {
     border-color: var(--primary);
+    box-shadow: var(--glow-cyan);
 }
 
 .groups-grid {
@@ -273,10 +377,16 @@ canvas {
 }
 
 .group-card {
-    background: #eef2ff;
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.15);
     border-radius: var(--radius);
     padding: 1rem;
     transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.group-card:hover {
+    border-color: rgba(0, 255, 255, 0.35);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
 }
 
 /* Card Shuffle Animation */
@@ -288,18 +398,19 @@ canvas {
 
 .shuffle-card {
     position: absolute;
-    background: var(--surface);
-    border: 2px solid var(--primary);
+    background: var(--bg-darker);
+    border: 1px solid var(--primary);
     border-radius: var(--radius);
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--primary);
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.3), 0 0 4px rgba(0, 255, 255, 0.2);
     white-space: nowrap;
     pointer-events: none;
     z-index: 1;
     transition: none;
+    text-shadow: 0 0 6px rgba(0, 255, 255, 0.5);
 }
 
 .shuffle-card.dealing {
@@ -322,9 +433,13 @@ canvas {
 }
 
 .group-card h3 {
-    font-size: 0.9rem;
-    color: var(--primary);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
     margin-bottom: 0.5rem;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.5);
 }
 
 .group-card ul {
@@ -334,6 +449,7 @@ canvas {
 
 .group-card li {
     padding: 0.2rem 0;
+    color: var(--text);
 }
 
 .empty-state {
@@ -349,10 +465,11 @@ canvas {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.8);
     z-index: 100;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(4px);
 }
 
 .secret-overlay.active {
@@ -361,18 +478,24 @@ canvas {
 }
 
 .secret-menu {
-    background: var(--surface);
+    background: var(--bg-darker);
+    border: 1px solid var(--accent);
     border-radius: var(--radius);
     padding: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.3), 0 0 60px rgba(255, 0, 255, 0.1);
     text-align: center;
     max-width: 340px;
     width: 90%;
 }
 
 .secret-menu h2 {
-    font-size: 1.25rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
     margin-bottom: 0.25rem;
+    text-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
 }
 
 .secret-hint {
@@ -392,34 +515,42 @@ canvas {
 .btn-secret {
     width: 100%;
     padding: 0.6rem 1rem;
-    background: #eef2ff;
-    color: var(--primary);
-    border: 1px solid var(--border);
+    background: rgba(255, 0, 255, 0.08);
+    color: var(--accent);
+    border: 1px solid rgba(255, 0, 255, 0.3);
     border-radius: var(--radius);
-    font-size: 0.95rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
 .btn-secret:hover {
-    background: #e0e7ff;
+    background: rgba(255, 0, 255, 0.18);
+    box-shadow: var(--glow-magenta);
 }
 
 .btn-close {
     padding: 0.5rem 1.5rem;
-    background: var(--text-muted);
-    color: white;
-    border: none;
+    background: rgba(90, 106, 138, 0.2);
+    color: var(--text-muted);
+    border: 1px solid rgba(90, 106, 138, 0.3);
     border-radius: var(--radius);
-    font-size: 0.9rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
 }
 
 .btn-close:hover {
-    background: var(--text);
+    background: rgba(90, 106, 138, 0.35);
+    color: var(--text);
 }
 
 @media (max-width: 480px) {
@@ -428,6 +559,6 @@ canvas {
     }
 
     header h1 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
     }
 }

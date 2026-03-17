@@ -25,13 +25,19 @@ function setInputsEnabled(enabled) {
 }
 
 function addName() {
-    const name = nameInput.value.trim();
-    if (!name) return;
-    if (names.some(n => n.toLowerCase() === name.toLowerCase())) {
+    const raw = nameInput.value;
+    if (!raw.trim()) return;
+    const entries = raw.split(',').map(s => s.trim()).filter(Boolean);
+    let added = false;
+    for (const entry of entries) {
+        if (names.some(n => n.toLowerCase() === entry.toLowerCase())) continue;
+        names.push(entry);
+        added = true;
+    }
+    if (!added) {
         nameInput.select();
         return;
     }
-    names.push(name);
     nameInput.value = '';
     nameInput.focus();
     saveNames();
@@ -67,9 +73,9 @@ function updateButtonStates() {
 
 // --- Wheel ---
 const COLORS = [
-    '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444',
-    '#3b82f6', '#8b5cf6', '#14b8a6', '#f97316', '#06b6d4',
-    '#e11d48', '#84cc16', '#a855f7', '#0ea5e9', '#d946ef',
+    '#00ffff', '#ff00ff', '#ff2d95', '#7b2dff', '#00ff88',
+    '#0088ff', '#ff6600', '#ff0066', '#00ccaa', '#aa00ff',
+    '#ffcc00', '#00aaff', '#ff3366', '#33ffcc', '#cc00ff',
 ];
 let currentAngle = 0;
 let spinning = false;
@@ -81,12 +87,15 @@ function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (names.length === 0) {
-        ctx.fillStyle = '#e2e8f0';
+        ctx.fillStyle = '#1a1a2e';
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '14px sans-serif';
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#5a6a8a';
+        ctx.font = '14px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('Add names to spin', cx, cy);
@@ -106,7 +115,7 @@ function drawWheel() {
         ctx.closePath();
         ctx.fillStyle = COLORS[i % COLORS.length];
         ctx.fill();
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -115,7 +124,7 @@ function drawWheel() {
         ctx.translate(cx, cy);
         ctx.rotate(start + sliceAngle / 2);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 13px sans-serif';
+        ctx.font = 'bold 13px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const labelRadius = radius * 0.65;
