@@ -1,3 +1,52 @@
+// --- Sound Effects (Web Audio API) ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function ensureAudioResumed() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTick(time, pitch = 800, volume = 0.15) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(pitch, time);
+    gain.gain.setValueAtTime(volume, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
+    osc.start(time);
+    osc.stop(time + 0.06);
+}
+
+function playVictoryFanfare() {
+    const now = audioCtx.currentTime;
+    const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now + i * 0.12);
+        gain.gain.setValueAtTime(0.2, now + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.3);
+        osc.start(now + i * 0.12);
+        osc.stop(now + i * 0.12 + 0.3);
+    });
+    // Final shimmer
+    const shimmer = audioCtx.createOscillator();
+    const sGain = audioCtx.createGain();
+    shimmer.connect(sGain);
+    sGain.connect(audioCtx.destination);
+    shimmer.type = 'sine';
+    shimmer.frequency.setValueAtTime(1047, now + 0.48);
+    shimmer.frequency.exponentialRampToValueAtTime(2094, now + 0.9);
+    sGain.gain.setValueAtTime(0.15, now + 0.48);
+    sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+    shimmer.start(now + 0.48);
+    shimmer.stop(now + 1.0);
+}
+
 // --- State ---
 let names = JSON.parse(localStorage.getItem('teamNames') || '[]');
 
@@ -140,10 +189,12 @@ function spinWheel() {
     setInputsEnabled(false);
     winnerDisplay.textContent = '';
 
+    ensureAudioResumed();
     const totalRotation = Math.PI * 2 * (4 + Math.random() * 4); // 4-8 full spins
     const duration = ultraSlowMode ? 60000 : 3000 + Math.random() * 1000;
     const startAngle = currentAngle;
     const startTime = performance.now();
+    let lastSliceIndex = -1;
 
     function animate(now) {
         const elapsed = now - startTime;
@@ -153,6 +204,16 @@ function spinWheel() {
         currentAngle = startAngle + totalRotation * eased;
         drawWheel();
 
+        // Play tick when crossing a slice boundary
+        const sliceAngle = (Math.PI * 2) / names.length;
+        const norm = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const currentSlice = Math.floor(norm / sliceAngle);
+        if (currentSlice !== lastSliceIndex) {
+            lastSliceIndex = currentSlice;
+            const pitch = 600 + (1 - progress) * 600; // higher pitch when fast
+            playTick(audioCtx.currentTime, pitch, 0.12);
+        }
+
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
@@ -160,11 +221,11 @@ function spinWheel() {
             spinBtn.disabled = false;
             setInputsEnabled(true);
             // Determine winner: pointer is at the top (-PI/2)
-            const sliceAngle = (Math.PI * 2) / names.length;
             const norm = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
             const pointerPos = ((-Math.PI / 2 - norm) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
             const winnerIndex = Math.floor(pointerPos / sliceAngle) % names.length;
             winnerDisplay.textContent = `🎉 ${names[winnerIndex]}!`;
+            playVictoryFanfare();
         }
     }
 
@@ -227,6 +288,7 @@ function animateCardShuffle(shuffled, groups) {
     });
 
     // Phase 1: Deal cards out to random positions
+    ensureAudioResumed();
     requestAnimationFrame(() => {
         cards.forEach((card, i) => {
             setTimeout(() => {
@@ -237,6 +299,7 @@ function animateCardShuffle(shuffled, groups) {
                 card.el.style.left = x + 'px';
                 card.el.style.top = y + 'px';
                 card.el.style.transform = `rotate(${rot}deg) scale(1)`;
+                playTick(audioCtx.currentTime, 400 + i * 30, 0.1);
             }, i * 60);
         });
     });
@@ -255,7 +318,7 @@ function animateCardShuffle(shuffled, groups) {
                 return;
             }
             round++;
-            cards.forEach(card => {
+            cards.forEach((card, ci) => {
                 card.el.classList.remove('dealing');
                 card.el.classList.add('shuffling');
                 const x = Math.random() * (areaW - card.w - 20) + 10;
@@ -265,6 +328,8 @@ function animateCardShuffle(shuffled, groups) {
                 card.el.style.top = y + 'px';
                 card.el.style.transform = `rotate(${rot}deg) scale(1)`;
             });
+            // Shuffle whoosh sound per round
+            playTick(audioCtx.currentTime, 300 + round * 100, 0.15);
             setTimeout(doShuffleRound, shuffleInterval);
         }
         doShuffleRound();
@@ -351,6 +416,9 @@ function settleIntoGroups(cards, groups, areaW, areaH) {
         card.el.style.top = t.y + 'px';
         card.el.style.transform = 'rotate(0deg) scale(1)';
     });
+
+    // Victory fanfare when groups are formed
+    setTimeout(() => playVictoryFanfare(), 400);
 
     // Re-enable generate button after animation
     setTimeout(() => {
