@@ -259,6 +259,11 @@ function generateGroups() {
         groups.push(shuffled.slice(index, index + groupSize));
         index += groupSize;
     }
+    // Never allow a group of 1 — merge singleton into the previous group
+    if (groups.length > 1 && groups[groups.length - 1].length === 1) {
+        const singleton = groups.pop();
+        groups[groups.length - 1].push(...singleton);
+    }
 
     animateCardShuffle(shuffled, groups);
 }
