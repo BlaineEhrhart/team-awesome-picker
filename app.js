@@ -176,6 +176,8 @@ function generateGroups() {
     if (names.length === 0) return;
     const size = Math.max(1, Math.min(names.length, parseInt(groupSizeInput.value) || 2));
     groupSizeInput.value = size;
+    generateBtn.disabled = true;
+
     const shuffled = shuffle(names);
     const numGroups = Math.ceil(shuffled.length / size);
     const baseSize = Math.floor(shuffled.length / numGroups);
@@ -187,7 +189,164 @@ function generateGroups() {
         groups.push(shuffled.slice(index, index + groupSize));
         index += groupSize;
     }
-    renderGroups(groups);
+
+    animateCardShuffle(shuffled, groups);
+}
+
+function animateCardShuffle(shuffled, groups) {
+    // Set up the overlay container
+    groupsGrid.innerHTML = '';
+    groupsGrid.classList.add('shuffle-overlay');
+    const gridRect = groupsGrid.getBoundingClientRect();
+    const areaW = groupsGrid.offsetWidth;
+    const areaH = Math.max(200, groupsGrid.offsetHeight);
+    groupsGrid.style.minHeight = areaH + 'px';
+
+    // Create card elements starting stacked in the center
+    const cards = shuffled.map((name) => {
+        const el = document.createElement('div');
+        el.className = 'shuffle-card';
+        el.textContent = name;
+        groupsGrid.appendChild(el);
+        // Start stacked in center
+        const cardW = el.offsetWidth;
+        const cardH = el.offsetHeight;
+        el.style.left = (areaW / 2 - cardW / 2) + 'px';
+        el.style.top = (areaH / 2 - cardH / 2) + 'px';
+        el.style.transform = 'rotate(0deg) scale(0)';
+        return { el, name, w: cardW, h: cardH };
+    });
+
+    // Phase 1: Deal cards out to random positions
+    requestAnimationFrame(() => {
+        cards.forEach((card, i) => {
+            setTimeout(() => {
+                card.el.classList.add('dealing');
+                const x = Math.random() * (areaW - card.w - 20) + 10;
+                const y = Math.random() * (areaH - card.h - 20) + 10;
+                const rot = (Math.random() - 0.5) * 30;
+                card.el.style.left = x + 'px';
+                card.el.style.top = y + 'px';
+                card.el.style.transform = `rotate(${rot}deg) scale(1)`;
+            }, i * 60);
+        });
+    });
+
+    const dealTime = cards.length * 60 + 600;
+
+    // Phase 2: Shuffle — move cards around randomly a few times
+    const shuffleRounds = 3;
+    const shuffleInterval = 400;
+    setTimeout(() => {
+        let round = 0;
+        function doShuffleRound() {
+            if (round >= shuffleRounds) {
+                // Phase 3: Settle into groups
+                settleIntoGroups(cards, groups, areaW, areaH);
+                return;
+            }
+            round++;
+            cards.forEach(card => {
+                card.el.classList.remove('dealing');
+                card.el.classList.add('shuffling');
+                const x = Math.random() * (areaW - card.w - 20) + 10;
+                const y = Math.random() * (areaH - card.h - 20) + 10;
+                const rot = (Math.random() - 0.5) * 40;
+                card.el.style.left = x + 'px';
+                card.el.style.top = y + 'px';
+                card.el.style.transform = `rotate(${rot}deg) scale(1)`;
+            });
+            setTimeout(doShuffleRound, shuffleInterval);
+        }
+        doShuffleRound();
+    }, dealTime);
+}
+
+function settleIntoGroups(cards, groups, areaW, areaH) {
+    const minColWidth = 150;
+    const rowHeight = 32;
+    const groupHeaderHeight = 28;
+    const padding = 12;
+
+    // Determine how many columns fit per row, then wrap
+    const colsPerRow = Math.max(1, Math.floor((areaW - padding) / minColWidth));
+    const colWidth = (areaW - padding) / Math.min(groups.length, colsPerRow);
+
+    // Calculate row offsets — each "row of groups" is stacked vertically
+    function getGroupPosition(gi) {
+        const row = Math.floor(gi / colsPerRow);
+        const col = gi % colsPerRow;
+        // Find the tallest group in previous rows to get the y offset
+        let yOffset = padding;
+        for (let r = 0; r < row; r++) {
+            let maxInRow = 0;
+            for (let c = 0; c < colsPerRow; c++) {
+                const idx = r * colsPerRow + c;
+                if (idx < groups.length) {
+                    maxInRow = Math.max(maxInRow, groups[idx].length);
+                }
+            }
+            yOffset += groupHeaderHeight + maxInRow * rowHeight + padding;
+        }
+        return { x: col * colWidth + padding, y: yOffset };
+    }
+
+    // Add group header labels
+    groups.forEach((group, gi) => {
+        const pos = getGroupPosition(gi);
+        const header = document.createElement('div');
+        header.className = 'shuffle-card settling';
+        header.style.fontWeight = '700';
+        header.style.color = 'var(--primary)';
+        header.style.background = 'transparent';
+        header.style.border = 'none';
+        header.style.boxShadow = 'none';
+        header.style.fontSize = '0.9rem';
+        header.style.left = pos.x + 'px';
+        header.style.top = pos.y + 'px';
+        header.style.transform = 'scale(1)';
+        header.style.opacity = '0';
+        header.textContent = `Group ${gi + 1}`;
+        groupsGrid.appendChild(header);
+        setTimeout(() => { header.style.opacity = '1'; }, 400);
+    });
+
+    // Build a name -> target position map
+    const targets = {};
+    groups.forEach((group, gi) => {
+        const pos = getGroupPosition(gi);
+        group.forEach((name, ni) => {
+            targets[name] = {
+                x: pos.x,
+                y: pos.y + groupHeaderHeight + ni * rowHeight,
+            };
+        });
+    });
+
+    // Calculate needed height from the last row of groups
+    const lastRowStart = Math.floor((groups.length - 1) / colsPerRow) * colsPerRow;
+    let lastRowMaxMembers = 0;
+    for (let c = lastRowStart; c < groups.length; c++) {
+        lastRowMaxMembers = Math.max(lastRowMaxMembers, groups[c].length);
+    }
+    const lastGroupPos = getGroupPosition(groups.length - 1);
+    const neededHeight = lastGroupPos.y + groupHeaderHeight + lastRowMaxMembers * rowHeight + padding;
+    groupsGrid.style.minHeight = neededHeight + 'px';
+
+    // Settle cards
+    cards.forEach(card => {
+        card.el.classList.remove('shuffling');
+        card.el.classList.add('settling');
+        const t = targets[card.name];
+        card.el.style.left = t.x + 'px';
+        card.el.style.top = t.y + 'px';
+        card.el.style.transform = 'rotate(0deg) scale(1)';
+    });
+
+    // Re-enable generate button after animation
+    setTimeout(() => {
+        generateBtn.disabled = names.length === 0;
+    }, 600);
 }
 
 function renderGroups(groups) {
