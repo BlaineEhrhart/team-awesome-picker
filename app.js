@@ -132,7 +132,7 @@ function spinWheel() {
     winnerDisplay.textContent = '';
 
     const totalRotation = Math.PI * 2 * (4 + Math.random() * 4); // 4-8 full spins
-    const duration = 3000 + Math.random() * 1000;
+    const duration = ultraSlowMode ? 60000 : 3000 + Math.random() * 1000;
     const startAngle = currentAngle;
     const startTime = performance.now();
 
@@ -177,9 +177,15 @@ function generateGroups() {
     const size = Math.max(1, Math.min(names.length, parseInt(groupSizeInput.value) || 2));
     groupSizeInput.value = size;
     const shuffled = shuffle(names);
+    const numGroups = Math.ceil(shuffled.length / size);
+    const baseSize = Math.floor(shuffled.length / numGroups);
+    const remainder = shuffled.length % numGroups;
     const groups = [];
-    for (let i = 0; i < shuffled.length; i += size) {
-        groups.push(shuffled.slice(i, i + size));
+    let index = 0;
+    for (let i = 0; i < numGroups; i++) {
+        const groupSize = baseSize + (i < remainder ? 1 : 0);
+        groups.push(shuffled.slice(index, index + groupSize));
+        index += groupSize;
     }
     renderGroups(groups);
 }
@@ -231,6 +237,40 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
     });
+});
+
+// --- Konami Code ---
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIndex = 0;
+const secretOverlay = document.getElementById('secretOverlay');
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === KONAMI[konamiIndex]) {
+        konamiIndex++;
+        if (konamiIndex === KONAMI.length) {
+            konamiIndex = 0;
+            secretOverlay.classList.add('active');
+        }
+    } else {
+        konamiIndex = e.key === KONAMI[0] ? 1 : 0;
+    }
+});
+
+document.getElementById('secretClose').addEventListener('click', () => {
+    secretOverlay.classList.remove('active');
+});
+
+secretOverlay.addEventListener('click', (e) => {
+    if (e.target === secretOverlay) secretOverlay.classList.remove('active');
+});
+
+let ultraSlowMode = false;
+document.getElementById('secretSlow').addEventListener('click', () => {
+    ultraSlowMode = !ultraSlowMode;
+    document.getElementById('secretSlow').textContent = ultraSlowMode
+        ? 'Ultra Slow Spin: ON'
+        : 'Ultra Slow Spin (60s)';
+    secretOverlay.classList.remove('active');
 });
 
 // --- Init ---
